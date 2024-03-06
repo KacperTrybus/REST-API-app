@@ -14,11 +14,16 @@ async function run() {
   try {
     await client.connect();
     await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    console.log("Database connection succesful");
+  } catch (error) {
+    console.error("Database connection failed:", error);
+    process.exit(1);
   } finally {
     await client.close();
   }
 }
 run().catch(console.dir);
+
+module.exports = {
+  run,
+};
