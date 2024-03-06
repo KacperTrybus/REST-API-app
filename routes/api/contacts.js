@@ -1,22 +1,28 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const { contactValidation } = require("./validation");
-const {
-  listContacts,
-  getContactById,
-  removeContact,
-  addContact,
-  updateContact,
-} = require("../../models/contacts");
 
-router.get("/", (req, res) => {
+mongoose.connect(
+  "mongodb+srv://kacpertrybus133:123123123@cluster0.rdi4yxt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    dbName: "db-contacts",
+  }
+);
+
+const contactSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  phone: String,
+});
+const Contact = mongoose.model("Contact", contactSchema);
+
+router.get("/", async (req, res) => {
   try {
-    const contacts = listContacts();
-    if (contacts !== null) {
-      res.json(contacts);
-    } else {
-      throw new Error("Unable to fetch contacts");
-    }
+    const contacts = await Contact.find();
+    res.json(contacts);
   } catch (error) {
     console.error("Error listing contacts:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -26,7 +32,7 @@ router.get("/", (req, res) => {
 router.get("/:id", async (req, res) => {
   const contactId = req.params.id;
   try {
-    const contact = await getContactById(contactId);
+    const contact = await Contact.findById(contactId);
     if (!contact) {
       res.status(404).json({ message: "Contact not found" });
     } else {
@@ -45,7 +51,8 @@ router.post("/", async (req, res) => {
   }
   const { name, email, phone } = req.body;
   try {
-    const newContact = await addContact(name, email, phone);
+    const newContact = new Contact({ name, email, phone });
+    await newContact.save();
     res.status(201).json(newContact);
   } catch (error) {
     console.error("Error adding contact:", error);
@@ -56,8 +63,8 @@ router.post("/", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   const contactId = req.params.id;
   try {
-    const result = await removeContact(contactId);
-    if (!result) {
+    const result = await Contact.deleteOne({ _id: contactId });
+    if (result.deletedCount === 0) {
       res.status(404).json({ message: "Contact not found" });
     } else {
       res.json({ message: "Contact removed successfully" });
@@ -78,17 +85,15 @@ router.put("/:id", async (req, res) => {
   const { name, email, phone } = req.body;
 
   try {
-    const updatedContact = await updateContact(contactId, {
-      name,
-      email,
-      phone,
-    });
-
-    if (!updatedContact) {
+    const result = await Contact.updateOne(
+      { _id: contactId },
+      { $set: { name, email, phone } }
+    );
+    if (result.n === 0) {
       return res.status(404).json({ message: "Contact not found" });
     }
 
-    res.json(updatedContact);
+    res.json({ message: "Contact updated successfully" });
   } catch (error) {
     console.error(`Error updating contact with ID ${contactId}:`, error);
     res.status(500).json({ message: "Internal server error" });
