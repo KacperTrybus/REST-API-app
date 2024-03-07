@@ -2,15 +2,15 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const { contactValidation } = require("./validation");
+require("dotenv").config();
 
-mongoose.connect(
-  "mongodb+srv://kacpertrybus133:123123123@cluster0.rdi4yxt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    dbName: "db-contacts",
-  }
-);
+const uri = process.env.DB_URL;
+
+mongoose.connect(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  dbName: "db-contacts",
+});
 
 const contactSchema = new mongoose.Schema({
   name: {

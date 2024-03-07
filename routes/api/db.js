@@ -1,6 +1,6 @@
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const uri =
-  "mongodb+srv://kacpertrybus133:123123123@cluster0.rdi4yxt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+require("dotenv").config();
+const uri = process.env.DB_URL;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -9,11 +9,10 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
-
 async function run() {
   try {
     await client.connect();
-    await client.db("admin").command({ ping: 1 });
+    await client.db("db-contacts").command({ ping: 1 });
     console.log("Database connection succesful");
   } catch (error) {
     console.error("Database connection failed:", error);
