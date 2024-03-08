@@ -4,14 +4,6 @@ const mongoose = require("mongoose");
 const { contactValidation } = require("./validation");
 require("dotenv").config();
 
-const uri = process.env.DB_URL;
-
-mongoose.connect(uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  dbName: "db-contacts",
-});
-
 const contactSchema = new mongoose.Schema({
   name: {
     type: String,

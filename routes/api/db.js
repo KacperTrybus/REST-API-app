@@ -1,24 +1,29 @@
-const { MongoClient, ServerApiVersion } = require("mongodb");
+// const { MongoClient, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
 const uri = process.env.DB_URL;
 
-const client = new MongoClient(uri, {
+const mongoose = require("mongoose");
+const options = {
   serverApi: {
-    version: ServerApiVersion.v1,
+    version: "1",
     strict: true,
     deprecationErrors: true,
   },
-});
+};
+
 async function run() {
   try {
-    await client.connect();
-    await client.db("db-contacts").command({ ping: 1 });
-    console.log("Database connection succesful");
+    await mongoose.connect(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      dbName: "db-contacts",
+
+      ...options,
+    });
+    console.log("Database connection successful");
   } catch (error) {
     console.error("Database connection failed:", error);
     process.exit(1);
-  } finally {
-    await client.close();
   }
 }
 run().catch(console.dir);
