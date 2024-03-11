@@ -22,7 +22,7 @@ const authMiddleware = async (req, res, next) => {
 
     const user = await User.findById(userId);
 
-    if (!user || user._id.toString() !== userId) {
+    if (!user) {
       return res
         .status(401)
         .json({ message: "Not authorized, userId invalid" });

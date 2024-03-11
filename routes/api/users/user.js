@@ -66,13 +66,10 @@ router.post("/login", async (req, res) => {
 
 router.get("/logout", authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
-
-    user.token = null;
-    await user.save();
+    await User.findOneAndUpdate(
+      { _id: req.user._id },
+      { $set: { token: null } }
+    );
 
     res.status(204).send();
   } catch (error) {
@@ -83,11 +80,7 @@ router.get("/logout", authMiddleware, async (req, res) => {
 
 router.get("/current", authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-
-    if (!user) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
+    const { user } = req;
 
     res.status(200).json({
       email: user.email,
