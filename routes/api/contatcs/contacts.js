@@ -1,7 +1,8 @@
 const express = require("express");
-const router = express.Router();
 const mongoose = require("mongoose");
-const { contactValidation } = require("./validation");
+const router = express.Router();
+const { contactValidation } = require("./contatctValidation");
+const authMiddleware = require("../auth");
 require("dotenv").config();
 
 const contactSchema = new mongoose.Schema({
@@ -19,8 +20,14 @@ const contactSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "user",
+  },
 });
 const Contact = mongoose.model("Contact", contactSchema);
+
+router.use(authMiddleware);
 
 router.get("/", async (req, res) => {
   try {
