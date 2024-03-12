@@ -1,7 +1,12 @@
+const fs = require("fs");
+const path = require("path");
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const gravatar = require("gravatar");
+const multer = require("multer");
+const jimp = require("jimp");
 const { userValidation } = require("./userValidation");
 const authMiddleware = require("../auth");
 const { User } = require("./userModel");
@@ -20,11 +25,13 @@ router.post("/signup", async (req, res) => {
 
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(req.body.password, salt);
+  const avatar = gravatar.url(req.body.email, { s: "250", r: "pg", d: "mp" });
 
   const newUser = new User({
     email: req.body.email,
     password: hashedPassword,
     subscription: "starter",
+    avatarURL: avatar,
   });
 
   try {
@@ -91,5 +98,37 @@ router.get("/current", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+const upload = multer({ dest: "tmp/" });
+
+router.patch(
+  "/avatars",
+  authMiddleware,
+  upload.single("avatar"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const image = await jimp.read(req.file.path);
+      await image.resize(250, 250).write(req.file.path);
+
+      const avatarFileName = `${req.user._id.toString()}_${Date.now()}${path.extname(
+        req.file.originalname
+      )}`;
+      const avatarPath = `public/avatars/${avatarFileName}`;
+      fs.renameSync(req.file.path, avatarPath);
+
+      req.user.avatarURL = `/avatars/${avatarFileName}`;
+      await req.user.save();
+
+      res.status(200).json({ avatarURL: req.user.avatarURL });
+    } catch (error) {
+      console.error("Error updating avatar:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
 
 module.exports = router;
